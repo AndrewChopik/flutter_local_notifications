@@ -3,7 +3,7 @@
 [![pub package](https://img.shields.io/pub/v/flutter_local_notifications.svg)](https://pub.dartlang.org/packages/flutter_local_notifications)
 [![Build Status](https://api.cirrus-ci.com/github/MaikuB/flutter_local_notifications.svg)](https://cirrus-ci.com/github/MaikuB/flutter_local_notifications/master)
 
-A cross platform plugin for displaying local notifications. 
+A cross platform plugin for displaying local notifications.
 
 ## Table of contents
 - **[📱 Supported platforms](#-supported-platforms)**
@@ -11,7 +11,6 @@ A cross platform plugin for displaying local notifications.
 - **[⚠ Caveats and limitations](#-caveats-and-limitations)**
    - [Compatibility with firebase_messaging](#compatibility-with-firebase_messaging)
    - [Scheduled Android notifications](#scheduled-android-notifications)
-   - [Recurring Android notifications](#recurring-android-notifications)
    - [iOS pending notifications limit](#ios-pending-notifications-limit)
    - [Scheduled notifications and daylight savings](#scheduled-notifications-and-daylight-savings)
    - [Updating application badge](#updating-application-badge)
@@ -60,7 +59,7 @@ A cross platform plugin for displaying local notifications.
 * Retrieve a list of pending notification requests that have been scheduled to be shown in the future
 * Cancelling/removing notification by id or all of them
 * Specify a custom notification sound
-* Ability to handle when a user has tapped on a notification, when the app is the foreground, background or terminated
+* Ability to handle when a user has tapped on a notification, when the app is in the foreground, background or is terminated
 * Determine if an app was launched due to tapping on a notification
 * [Android] Configuring the importance level
 * [Android] Configuring the priority
@@ -68,7 +67,7 @@ A cross platform plugin for displaying local notifications.
 * [Android] Configure the default icon for all notifications
 * [Android] Configure the icon for each notification (overrides the default when specified)
 * [Android] Configure the large icon for each notification. The icon can be a drawable or a file on the device
-* [Android] Formatting notification content via ([HTML markup](https://developer.android.com/guide/topics/resources/string-resource.html#StylingWithHTML))
+* [Android] Formatting notification content via [HTML markup](https://developer.android.com/guide/topics/resources/string-resource.html#StylingWithHTML)
 * [Android] Support for the following notification styles
     * Big picture
     * Big text
@@ -82,6 +81,7 @@ A cross platform plugin for displaying local notifications.
 * [Android] Ability to create and delete notification channels
 * [Android] Retrieve the list of active notifications
 * [Android] Full-screen intent notifications
+* [Android] Start a foreground service
 * [iOS (all supported versions) & macOS 10.14+] Request notification permissions and customise the permissions being requested around displaying notifications
 * [iOS 10 or newer and macOS 10.14 or newer] Display notifications with attachments
 
@@ -124,6 +124,7 @@ The `schedule`, `showDailyAtTime` and `showWeeklyAtDayAndTime` methods that were
 | macOS | <img src="https://github.com/MaikuB/flutter_local_notifications/raw/master/images/macos_notification.png"> |
 
 
+
 ## 👏 Acknowledgements
 
 * [Javier Lecuona](https://github.com/javiercbk) for submitting the PR that added the ability to have notifications shown daily
@@ -152,7 +153,8 @@ When specifying the large icon bitmap or big picture bitmap (associated with the
 
 #### Full-screen intent notifications
 
-If your application needs the ability to schedule full-screen intent notifications, add the following attributes to the activity you're opening. For a Flutter application that is typically only ony activity extends from `FlutterActivity`. These attributes ensure the screen turns on and shows when the device is locked.
+If your application needs the ability to schedule full-screen intent notifications, add the following attributes to the activity you're opening. For a Flutter application, there is typically only one activity extends from `FlutterActivity`. These attributes ensure the screen turns on and shows when the device is locked.
+
 ```xml
 <activity
     android:showWhenLocked="true"
@@ -199,7 +201,7 @@ By design, iOS applications *do not* display notifications while the app is in t
 
 For iOS 10+, use the presentation options to control the behaviour for when a notification is triggered while the app is in the foreground. The default settings of the plugin will configure these such that a notification will be displayed when the app is in the foreground.
 
-For older versions of iOS, you need to handle the callback as part of specifying the method that should be fired to the `onDidReceiveLocalNotification` argument when creating an instance `IOSInitializationSettings` object that is passed to the function for initializing the plugin. 
+For older versions of iOS, you need to handle the callback as part of specifying the method that should be fired to the `onDidReceiveLocalNotification` argument when creating an instance `IOSInitializationSettings` object that is passed to the function for initializing the plugin.
 
 Here is an example:
 
@@ -249,14 +251,17 @@ Future onDidReceiveLocalNotification(
 
 
 ## ❓ Usage
+
 Before going on to copy-paste the code snippets in this section, double-check you have configured your application correctly.
 If you encounter any issues please refer to the API docs and the sample code in the `example` directory before opening a request on Github.
 
 ### Example app
-The `example` directory has a sample application that demonstrates the features of this plugin.
+
+The [`example`](https://github.com/MaikuB/flutter_local_notifications/tree/master/flutter_local_notifications/example) directory has a sample application that demonstrates the features of this plugin.
 
 ### API reference
-Checkout the lovely [API documentation](https://pub.dev/documentation/flutter_local_notifications/latest/flutter_local_notifications/flutter_local_notifications-library.html) generated by pub. 
+
+Checkout the lovely [API documentation](https://pub.dev/documentation/flutter_local_notifications/latest/flutter_local_notifications/flutter_local_notifications-library.html) generated by pub.
 
 
 ## Initialisation
@@ -301,6 +306,9 @@ In the real world, this payload could represent the id of the item you want to d
 The `IOSInitializationSettings` and `MacOSInitializationSettings` provides default settings on how the notification be presented when it is triggered and the application is in the foreground. There are optional named parameters that can be modified to suit your application's purposes. Here, it is omitted and the default values for these named properties is set such that all presentation options (alert, sound, badge) are enabled.
 
 On iOS and macOS, initialisation may show a prompt to requires users to give the application permission to display notifications (note: permissions don't need to be requested on Android). Depending on when this happens, this may not be the ideal user experience for your application. If so, please refer to the next section on how to work around this.
+
+For an explanation of the `onDidReceiveLocalNotification` callback associated with the `IOSInitializationSettings` class, please read  [this](https://github.com/MaikuB/flutter_local_notifications/tree/master/flutter_local_notifications#handling-notifications-whilst-the-app-is-in-the-foreground).
+
 
 *Note*: from version 4.0 of the plugin, calling `initialize` will not trigger the `onSelectNotification` callback when the application was started by tapping on a notification to trigger. Use the `getNotificationAppLaunchDetails` method that is available in the plugin if you need to handle a notification triggering the launch for an app e.g. change the home route of the app for deep-linking.
 
@@ -380,7 +388,9 @@ await flutterLocalNotificationsPlugin.show(
     payload: 'item x');
 ```
 
-In this block of code, the details specific to the Android platform is specified. This includes the channel details that is required for Android 8.0+. Whilst not shown, it's possible to specify details for iOS and macOS as well using the optional `iOS` and `macOS` named parameters if needed. The payload has been specified ('item x'), that will passed back through your application when the user has tapped on a notification. Note that for Android devices that notifications will only in appear in the tray and won't appear as a toast aka heads-up notification unless things like the priority/importance has been set appropriately. Refer to the Android docs (https://developer.android.com/guide/topics/ui/notifiers/notifications.html#Heads-up) for additional information. Note that the "ticker" text is passed here though it is optional and specific to Android. This allows for text to be shown in the status bar on older versions of Android when the notification is shown.
+Here, the first argument is the id of notification and is common to all methods that would result in a notification being shown. This is typically set a unique value per notification as using the same id multiple times would result in a notification being updated/overwritten.
+
+The details specific to the Android platform are also specified. This includes the channel details that is required for Android 8.0+. Whilst not shown, it's possible to specify details for iOS and macOS as well using the optional `iOS` and `macOS` named parameters if needed. The payload has been specified ('item x'), that will passed back through your application when the user has tapped on a notification. Note that for Android devices that notifications will only in appear in the tray and won't appear as a toast aka heads-up notification unless things like the priority/importance has been set appropriately. Refer to the Android docs (https://developer.android.com/guide/topics/ui/notifiers/notifications.html#Heads-up) for additional information. The "ticker" text is passed here is optional and specific to Android. This allows for text to be shown in the status bar on older versions of Android when the notification is shown.
 
 ### Scheduling a notification
 
@@ -404,10 +414,10 @@ tz.initializeTimeZones();
 Once the time zone database has been initialised, developers may optionally want to set a default local location/time zone
 
 ```dart
-tz.setLocalLocation(tz.getLocation(timeZoneName)); 
+tz.setLocalLocation(tz.getLocation(timeZoneName));
 ```
 
-The `timezone` package doesn't provide a way to obtain the current time zone on the device so developers will need to use platform channels (which is what the example app does) or use other packages that may be able to provide the information (e.g. [`flutter_native_timezone`](https://pub.dev/packages/flutter_native_timezone)).
+The `timezone` package doesn't provide a way to obtain the current time zone on the device so developers will need to use [platform channels](https://flutter.dev/docs/development/platform-integration/platform-channels) or use other packages that may be able to provide the information. The example app uses the [`flutter_native_timezone`](https://pub.dev/packages/flutter_native_timezone) plugin.
 
 Assuming the local location has been set, the `zonedScheduled` method can then be called in a manner similar to the following code
 
@@ -579,11 +589,11 @@ if(!UserDefaults.standard.bool(forKey: "Notification")) {
 
 ## 📈 Testing
 
-As the plugin class is not static, it is possible to mock and verify its behaviour when writing tests as part of your application. 
-Check the source code for a sample test suite that has been kindly implemented (_test/flutter_local_notifications_test.dart_) that demonstrates how this can be done. 
+As the plugin class is not static, it is possible to mock and verify its behaviour when writing tests as part of your application.
+Check the source code for a sample test suite that has been kindly implemented (_test/flutter_local_notifications_test.dart_) that demonstrates how this can be done.
 
-If you decide to use the plugin class directly as part of your tests, the methods will be mostly no-op and methods that return data will return default values. 
+If you decide to use the plugin class directly as part of your tests, the methods will be mostly no-op and methods that return data will return default values.
 
-Part of this is because the plugin detects if you're running on a supported plugin to determine which platform implementation of the plugin should be used. If it's neither Android or iOS, then it defaults to the aforementioned behaviour to reduce friction when writing tests. If this not desired then consider using mocks. 
+Part of this is because the plugin detects if you're running on a supported plugin to determine which platform implementation of the plugin should be used. If the platform isn't supported, it will default to the aforementioned behaviour to reduce friction when writing tests. If this not desired then consider using mocks.
 
 If a platform-specific implementation of the plugin is required for your tests, a [named constructor](https://pub.dev/documentation/flutter_local_notifications/latest/flutter_local_notifications/FlutterLocalNotificationsPlugin/FlutterLocalNotificationsPlugin.private.html) is available that allows you to specify the platform required e.g. a [`FakePlatform`](https://api.flutter.dev/flutter/package-platform_platform/FakePlatform-class.html).
